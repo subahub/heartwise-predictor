@@ -33,13 +33,17 @@ The system combines a modern frontend interface with a machine learning–based 
 ---
 
 ## 📂 Project Structure
+
+```text
+
 heartwise-predictor/
 │
-├── src/ # Frontend source code
-├── public/
-├── package.json
-├── vite.config.ts
-└── README.md
+├── src/           # Frontend source code
+├── public/        # Public assets
+├── package.json   # Project dependencies
+├── vite.config.ts # Vite configuration
+└── README.md      # Project documentation
+
 ## 📄 License
 
 This project is developed for academic and portfolio purposes.
