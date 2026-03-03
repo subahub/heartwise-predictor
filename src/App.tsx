@@ -15,6 +15,7 @@ import History from "./pages/History";
 import Hospitals from "./pages/Hospitals";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import HealthChatbot from "@/components/HealthChatbot";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
+          <HealthChatbot />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
