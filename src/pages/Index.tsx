@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, Shield, Activity, BarChart3, MapPin, Bell, ArrowRight, CheckCircle2, Users, Stethoscope, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/hero-image.jpg';
+import ECGHeartAnimation from '@/components/ECGHeartAnimation';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
 
@@ -70,20 +70,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden lg:block">
-              <div className="relative">
-                <img src={heroImage} alt="Cardiovascular health visualization" className="rounded-2xl shadow-2xl w-full heartbeat-glow" />
-                <div className="absolute -bottom-4 -left-4 glass-card rounded-xl px-4 py-3 animate-float">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-risk-low/20 flex items-center justify-center">
-                      <Activity className="h-5 w-5 text-risk-low" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-primary-foreground/60">Risk Score</p>
-                      <p className="font-heading font-bold text-primary-foreground">Low — 23/100</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <ECGHeartAnimation />
             </motion.div>
           </div>
         </div>

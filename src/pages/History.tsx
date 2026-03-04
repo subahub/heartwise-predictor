@@ -1,16 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getPredictionHistory } from '@/lib/riskCalculator';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Activity, Download, Trash2 } from 'lucide-react';
+import { Activity, Download, Trash2, FileText, FileSpreadsheet, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function History() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const history = getPredictionHistory();
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   useEffect(() => { if (!user) navigate('/login'); }, [user, navigate]);
   if (!user) return null;
@@ -30,7 +32,123 @@ export default function History() {
     }).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cardioguard_history.csv'; a.click();
-    toast.success('History exported!');
+    toast.success('CSV exported!');
+    setShowExportDialog(false);
+  };
+
+  const exportExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      const data = history.map(h => ({
+        Date: new Date(h.date).toLocaleDateString(),
+        'Risk Score': h.score,
+        'Risk Level': h.level.charAt(0).toUpperCase() + h.level.slice(1),
+        Age: h.age,
+        'BP Systolic': h.ap_hi,
+        'BP Diastolic': h.ap_lo,
+        Cholesterol: h.cholesterol === 1 ? 'Normal' : h.cholesterol === 2 ? 'Above Normal' : 'High',
+        Glucose: h.gluc === 1 ? 'Normal' : h.gluc === 2 ? 'Above Normal' : 'High',
+        BMI: +(h.weight / ((h.height / 100) ** 2)).toFixed(1),
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      ws['!cols'] = Object.keys(data[0] || {}).map(() => ({ wch: 16 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Health History');
+      XLSX.writeFile(wb, 'cardioguard_history.xlsx');
+      toast.success('Excel exported!');
+      setShowExportDialog(false);
+    } catch {
+      toast.error('Failed to export Excel.');
+    }
+  };
+
+  const exportPDF = async () => {
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const autoTable = (await import('jspdf-autotable')).default;
+
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      // Header
+      doc.setFillColor(20, 83, 93);
+      doc.rect(0, 0, pageWidth, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CardioGuard', 15, 16);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Cardiovascular Health Report', 15, 24);
+      doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 15, 30);
+
+      // Patient Info
+      doc.setTextColor(40, 40, 40);
+      let y = 45;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Patient Summary', 15, y);
+      y += 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Patient: ${user?.email || 'N/A'}`, 15, y);
+      doc.text(`Total Assessments: ${history.length}`, pageWidth / 2, y);
+      y += 6;
+
+      if (history.length > 0) {
+        const latest = history[history.length - 1];
+        doc.text(`Latest Score: ${latest.score}/100 (${latest.level.charAt(0).toUpperCase() + latest.level.slice(1)} Risk)`, 15, y);
+        doc.text(`Latest BP: ${latest.ap_hi}/${latest.ap_lo} mmHg`, pageWidth / 2, y);
+        y += 6;
+        const bmi = (latest.weight / ((latest.height / 100) ** 2)).toFixed(1);
+        doc.text(`BMI: ${bmi}`, 15, y);
+        doc.text(`Age: ${latest.age}`, pageWidth / 2, y);
+      }
+
+      y += 12;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Assessment History', 15, y);
+      y += 4;
+
+      // Table
+      const tableData = history.slice().reverse().map(h => [
+        new Date(h.date).toLocaleDateString(),
+        String(h.score),
+        h.level.charAt(0).toUpperCase() + h.level.slice(1),
+        String(h.age),
+        `${h.ap_hi}/${h.ap_lo}`,
+        h.cholesterol === 1 ? 'Normal' : h.cholesterol === 2 ? 'Above' : 'High',
+        (h.weight / ((h.height / 100) ** 2)).toFixed(1),
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Date', 'Score', 'Risk', 'Age', 'BP', 'Cholesterol', 'BMI']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [20, 83, 93], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+        bodyStyles: { fontSize: 9 },
+        alternateRowStyles: { fillColor: [245, 248, 250] },
+        margin: { left: 15, right: 15 },
+      });
+
+      // Footer disclaimer
+      const finalY = (doc as any).lastAutoTable?.finalY || y + 40;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, finalY + 10, pageWidth - 15, finalY + 10);
+      doc.setFontSize(7);
+      doc.setTextColor(130, 130, 130);
+      doc.text('This report is generated by CardioGuard for educational purposes only and does not replace professional medical consultation.', 15, finalY + 15);
+      doc.text(`© ${new Date().getFullYear()} CardioGuard. All rights reserved.`, 15, finalY + 19);
+
+      doc.save('cardioguard_report.pdf');
+      toast.success('PDF report exported!');
+      setShowExportDialog(false);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate PDF.');
+    }
   };
 
   const clearHistory = () => {
@@ -40,6 +158,30 @@ export default function History() {
 
   return (
     <div className="min-h-screen pt-20 pb-10 bg-background">
+      {/* Export Dialog */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Export Health Report</DialogTitle>
+            <DialogDescription>Choose your preferred export format.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={exportPDF}>
+              <FileText className="h-5 w-5 text-destructive" /> PDF Report
+              <span className="ml-auto text-xs text-muted-foreground">Professional format</span>
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={exportExcel}>
+              <FileSpreadsheet className="h-5 w-5 text-primary" /> Excel (.xlsx)
+              <span className="ml-auto text-xs text-muted-foreground">Spreadsheet</span>
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={exportCSV}>
+              <FileDown className="h-5 w-5 text-muted-foreground" /> CSV
+              <span className="ml-auto text-xs text-muted-foreground">Raw data</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto px-4 max-w-5xl space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -49,7 +191,7 @@ export default function History() {
           <div className="flex gap-2">
             {history.length > 0 && (
               <>
-                <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1"><Download className="h-4 w-4" /> Export CSV</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)} className="gap-1"><Download className="h-4 w-4" /> Export Report</Button>
                 <Button variant="ghost" size="sm" onClick={clearHistory} className="gap-1 text-destructive"><Trash2 className="h-4 w-4" /> Clear</Button>
               </>
             )}
@@ -92,7 +234,6 @@ export default function History() {
               </div>
             </div>
 
-            {/* Table */}
             <div className="bg-card rounded-xl border border-border card-glow overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
