@@ -40,13 +40,13 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 pt-28 pb-16 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.7 }} className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-primary-foreground/80 text-sm">
-                <Heart className="h-4 w-4 text-primary fill-primary" />
-                AI-Powered Heart Health Assessment
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-destructive/15 border border-destructive/30 text-primary-foreground text-sm">
+                <Heart className="h-4 w-4 text-destructive fill-destructive" />
+                17.9 million lives lost every year — let's change that
               </div>
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight">
-                Predict Heart Disease
-                <span className="block gradient-text">Before It Strikes</span>
+                Your Heart Speaks.
+                <span className="block gradient-text">We Help You Listen.</span>
               </h1>
               <p className="text-lg text-primary-foreground/70 max-w-lg">
                 CardioGuard uses machine learning trained on 70,000+ patient records to assess your cardiovascular risk — helping you take action before it's too late.
@@ -71,7 +71,7 @@ export default function LandingPage() {
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden lg:block">
               <div className="relative">
-                <img src={heroImage} alt="Cardiovascular health visualization" className="rounded-2xl shadow-2xl w-full" />
+                <img src={heroImage} alt="Cardiovascular health visualization" className="rounded-2xl shadow-2xl w-full heartbeat-glow" />
                 <div className="absolute -bottom-4 -left-4 glass-card rounded-xl px-4 py-3 animate-float">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-risk-low/20 flex items-center justify-center">

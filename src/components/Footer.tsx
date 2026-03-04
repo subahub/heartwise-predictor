@@ -38,8 +38,9 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-primary-foreground/10 text-center text-sm opacity-50">
-          © 2026 CardioGuard. All rights reserved. For informational purposes only — not medical advice.
+        <div className="mt-8 pt-8 border-t border-primary-foreground/10 text-center text-sm opacity-50 space-y-1">
+          <p>This platform provides educational information only and does not replace professional medical consultation.</p>
+          <p>© 2026 CardioGuard. All rights reserved.</p>
         </div>
       </div>
     </footer>
