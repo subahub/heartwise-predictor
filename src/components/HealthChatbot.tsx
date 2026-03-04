@@ -7,46 +7,65 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'hi', label: 'हिन्दी' },
-  { code: 'es', label: 'Español' },
-  { code: 'fr', label: 'Français' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'te', label: 'తెలుగు' },
-  { code: 'ta', label: 'தமிழ்' },
-  { code: 'bn', label: 'বাংলা' },
-  { code: 'mr', label: 'मराठी' },
-  { code: 'auto', label: '🌐 Auto-detect' },
-];
-
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cvd-chat`;
+
+/** Clean speech-to-text output: remove repeated/broken word fragments */
+function cleanTranscript(raw: string): string {
+  if (!raw) return raw;
+  // Split into words
+  const words = raw.trim().split(/\s+/);
+  const cleaned: string[] = [];
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const prev = cleaned[cleaned.length - 1];
+
+    // Skip exact duplicate of previous word
+    if (prev && word.toLowerCase() === prev.toLowerCase()) continue;
+
+    // Skip if previous word is a prefix fragment of current word (e.g., "sug" before "suggest")
+    if (prev && word.toLowerCase().startsWith(prev.toLowerCase()) && prev.length < word.length) {
+      cleaned[cleaned.length - 1] = word;
+      continue;
+    }
+
+    // Skip if current word is a prefix fragment of previous word
+    if (prev && prev.toLowerCase().startsWith(word.toLowerCase()) && word.length < prev.length) {
+      continue;
+    }
+
+    cleaned.push(word);
+  }
+
+  let result = cleaned.join(' ');
+  // Capitalize first letter
+  if (result.length > 0) {
+    result = result.charAt(0).toUpperCase() + result.slice(1);
+  }
+  // Ensure ends with punctuation
+  if (result && !/[.!?]$/.test(result)) {
+    result += '.';
+  }
+  return result;
+}
 
 export default function HealthChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [language, setLanguage] = useState('auto');
-  const [showLangPicker, setShowLangPicker] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Auto-scroll to bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  // Focus input when opened
   useEffect(() => {
-    if (open && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-    }
+    if (open && inputRef.current) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
   const streamChat = useCallback(async (allMessages: Msg[]) => {
@@ -72,11 +91,7 @@ export default function HealthChatbot() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({
-          messages: language !== 'auto'
-            ? [{ role: 'user', content: `Please respond in ${LANGUAGES.find(l => l.code === language)?.label || language}.` }, ...allMessages]
-            : allMessages,
-        }),
+        body: JSON.stringify({ messages: allMessages }),
       });
 
       if (resp.status === 429) { setError('Rate limited. Please wait a moment.'); setIsLoading(false); return; }
@@ -104,7 +119,7 @@ export default function HealthChatbot() {
             const parsed = JSON.parse(json);
             const c = parsed.choices?.[0]?.delta?.content;
             if (c) upsert(c);
-          } catch { /* partial json, ignore */ }
+          } catch { /* partial json */ }
         }
       }
     } catch (e) {
@@ -112,7 +127,7 @@ export default function HealthChatbot() {
       setError('Connection error. Please try again.');
     }
     setIsLoading(false);
-  }, [language]);
+  }, []);
 
   const handleSend = () => {
     const text = input.trim();
@@ -124,7 +139,7 @@ export default function HealthChatbot() {
     streamChat(updated);
   };
 
-  // Speech-to-text
+  // Speech-to-text with deduplication
   const toggleVoice = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -141,11 +156,12 @@ export default function HealthChatbot() {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = language === 'auto' ? '' : language;
+    recognition.lang = 'en-US';
 
     recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript;
-      setInput(prev => prev + transcript);
+      const rawTranscript = e.results[0][0].transcript;
+      const cleaned = cleanTranscript(rawTranscript);
+      setInput(prev => (prev ? prev + ' ' : '') + cleaned);
       setIsListening(false);
     };
     recognition.onerror = () => setIsListening(false);
@@ -177,7 +193,6 @@ export default function HealthChatbot() {
             aria-label="Open health chatbot"
           >
             <MessageCircleHeart className="h-6 w-6" />
-            {/* Pulse ring */}
             <span className="absolute inset-0 rounded-full bg-primary/40 pulse-ring" />
           </motion.button>
         )}
@@ -201,53 +216,16 @@ export default function HealthChatbot() {
                 </div>
                 <div>
                   <p className="font-heading font-semibold text-sm">CardioGuard AI</p>
-                  <p className="text-[10px] opacity-80">CVD Health Assistant • Multilingual</p>
+                  <p className="text-[10px] opacity-80">CVD Health Assistant • English</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowLangPicker(!showLangPicker)}
-                  className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
-                  title="Select language"
-                >
-                  <Globe className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-
-            {/* Language picker */}
-            <AnimatePresence>
-              {showLangPicker && (
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: 'auto' }}
-                  exit={{ height: 0 }}
-                  className="overflow-hidden bg-muted border-b border-border shrink-0"
-                >
-                  <div className="p-3 flex flex-wrap gap-1.5">
-                    {LANGUAGES.map(l => (
-                      <button
-                        key={l.code}
-                        onClick={() => { setLanguage(l.code); setShowLangPicker(false); }}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                          language === l.code
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-card text-foreground hover:bg-accent'
-                        }`}
-                      >
-                        {l.label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Messages */}
             <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
@@ -259,14 +237,14 @@ export default function HealthChatbot() {
                   <div>
                     <p className="font-heading font-semibold text-foreground">Hello! 👋</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      I'm your CVD health assistant. Ask me anything about heart health in any language!
+                      I'm your CVD health assistant. Ask me anything about heart health.
                     </p>
                   </div>
                   <div className="space-y-2">
                     {quickPrompts.map(q => (
                       <button
                         key={q}
-                        onClick={() => { setInput(q); }}
+                        onClick={() => setInput(q)}
                         className="block w-full text-left text-xs bg-muted hover:bg-accent rounded-lg px-3 py-2 transition-colors text-foreground"
                       >
                         {q}
