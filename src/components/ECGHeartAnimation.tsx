@@ -2,7 +2,7 @@ import heroHeart from '@/assets/hero-heart.jpg';
 
 export default function ECGHeartAnimation() {
   return (
-    <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl heartbeat-glow">
+    <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl animate-[heartbeatSlow_1.5s_ease-in-out_infinite]">
       {/* Hero heart image */}
       <img src={heroHeart} alt="Anatomical heart with ECG" className="w-full h-full object-cover" />
 
