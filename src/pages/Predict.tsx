@@ -6,9 +6,11 @@ import RiskGauge from '@/components/RiskGauge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, Minus, Download, RotateCcw } from 'lucide-react';
+import { Heart, ArrowRight, ArrowLeft, CheckCircle2, AlertTriangle, Minus, Download, RotateCcw, FileText, FileSpreadsheet, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportPredictionCSV, exportPredictionPDF, exportPredictionDOCX } from '@/lib/exportReport';
 
 const steps = ['Personal Info', 'Blood Pressure', 'Lab Results', 'Lifestyle'];
 
@@ -17,6 +19,7 @@ export default function Predict() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [result, setResult] = useState<RiskResult | null>(null);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [data, setData] = useState<PatientData>({
     age: 45, gender: 1, height: 165, weight: 70,
     ap_hi: 120, ap_lo: 80, cholesterol: 1, gluc: 1,
@@ -40,6 +43,30 @@ export default function Predict() {
   if (result) {
     return (
       <div className="min-h-screen pt-20 pb-10 bg-background">
+        {/* Export Dialog */}
+        <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Export Report</DialogTitle>
+              <DialogDescription>Choose your preferred export format.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Button variant="outline" className="w-full justify-start gap-3" onClick={() => { exportPredictionPDF(data, result); setShowExportDialog(false); }}>
+                <FileText className="h-5 w-5 text-destructive" /> PDF Report
+                <span className="ml-auto text-xs text-muted-foreground">Professional format</span>
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-3" onClick={() => { exportPredictionDOCX(data, result); setShowExportDialog(false); }}>
+                <FileSpreadsheet className="h-5 w-5 text-primary" /> Word (.docx)
+                <span className="ml-auto text-xs text-muted-foreground">Editable document</span>
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-3" onClick={() => { exportPredictionCSV(data, result); setShowExportDialog(false); }}>
+                <FileDown className="h-5 w-5 text-muted-foreground" /> CSV
+                <span className="ml-auto text-xs text-muted-foreground">Raw data</span>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
             <div className="text-center">
@@ -52,7 +79,6 @@ export default function Predict() {
                 <RiskGauge score={result.score} level={result.level} size={260} />
               </div>
 
-              {/* Risk Factors */}
               <h3 className="font-heading font-semibold text-foreground mb-3">Risk Factor Breakdown</h3>
               <div className="grid gap-2 mb-6">
                 {result.factors.map((f, i) => (
@@ -70,7 +96,6 @@ export default function Predict() {
                 ))}
               </div>
 
-              {/* Recommendations */}
               <h3 className="font-heading font-semibold text-foreground mb-3">Recommendations</h3>
               <ul className="space-y-2 mb-6">
                 {result.recommendations.map((r, i) => (
@@ -84,12 +109,7 @@ export default function Predict() {
               <div className="flex gap-3">
                 <Button onClick={reset} variant="outline" className="gap-2"><RotateCcw className="h-4 w-4" /> New Assessment</Button>
                 <Button onClick={() => navigate('/dashboard')} className="gap-2">Go to Dashboard <ArrowRight className="h-4 w-4" /></Button>
-                <Button variant="outline" className="gap-2" onClick={() => {
-                  const csv = `Date,Score,Level\n${new Date().toISOString()},${result.score},${result.level}`;
-                  const blob = new Blob([csv], { type: 'text/csv' });
-                  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cardioguard_report.csv'; a.click();
-                  toast.success('Report downloaded!');
-                }}>
+                <Button variant="outline" className="gap-2" onClick={() => setShowExportDialog(true)}>
                   <Download className="h-4 w-4" /> Export
                 </Button>
               </div>
