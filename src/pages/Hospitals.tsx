@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { indiaStates, indiaStatesDistricts } from '@/data/indiaLocations';
+import { indiaHospitalDatabase, IndiaHospital } from '@/data/indiaHospitals';
 
 interface Hospital {
   id: number;
@@ -49,19 +51,11 @@ const hospitalDatabase: Hospital[] = [
   { id: 22, name: 'Johns Hopkins Heart & Vascular Institute', address: '1800 Orleans St', city: 'Baltimore', state: 'Maryland', phone: '+1 (410) 955-5000', rating: 4.9, specialty: 'Cardiovascular Medicine', hours: 'Open 24/7', lat: 39.2966, lng: -76.5930, facilities: ['ICU', 'Heart Transplant Unit', 'Emergency', 'Cardiac Surgery', 'Research Lab'] },
   { id: 23, name: 'Virginia Mason Heart Institute', address: '1100 9th Ave', city: 'Seattle', state: 'Washington', phone: '+1 (206) 223-6600', rating: 4.6, specialty: 'Preventive Cardiology', hours: 'Mon-Fri 7AM-6PM', lat: 47.6107, lng: -122.3249, facilities: ['Cardiology Dept', 'Cardiac Rehab'] },
   { id: 24, name: 'Emory Heart & Vascular Center', address: '1364 Clifton Rd NE', city: 'Atlanta', state: 'Georgia', phone: '+1 (404) 778-5000', rating: 4.7, specialty: 'Interventional Cardiology', hours: 'Open 24/7', lat: 33.7930, lng: -84.3234, facilities: ['ICU', 'Emergency', 'Cardiac Surgery', 'Cath Lab'] },
-  { id: 25, name: 'AIIMS Cardiology Department', address: 'Sri Aurobindo Marg, Ansari Nagar', city: 'New Delhi', state: 'Delhi', phone: '+91 11 2658 8500', rating: 4.8, specialty: 'Interventional Cardiology', hours: 'Open 24/7', lat: 28.5672, lng: 77.2100, facilities: ['ICU', 'Cardiology Dept', 'Emergency', 'Cardiac Surgery', 'Research Lab'] },
-  { id: 26, name: 'Fortis Escorts Heart Institute', address: 'Okhla Rd, Sukhdev Vihar', city: 'New Delhi', state: 'Delhi', phone: '+91 11 4713 5000', rating: 4.7, specialty: 'Cardiac Surgery', hours: 'Open 24/7', lat: 28.5494, lng: 77.2740, facilities: ['ICU', 'Cardiac Surgery', 'Emergency', 'Cath Lab'] },
-  { id: 27, name: 'Narayana Institute of Cardiac Sciences', address: '258/A, Bommasandra Industrial Area', city: 'Bangalore', state: 'Karnataka', phone: '+91 80 7122 2222', rating: 4.8, specialty: 'Heart Transplant', hours: 'Open 24/7', lat: 12.8520, lng: 77.6670, facilities: ['ICU', 'Heart Transplant Unit', 'Emergency', 'Cardiac Surgery', 'Cardiac Rehab'] },
-  { id: 28, name: 'Asian Heart Institute', address: 'G/N Block, Bandra Kurla Complex', city: 'Mumbai', state: 'Maharashtra', phone: '+91 22 6698 6868', rating: 4.7, specialty: 'Preventive Cardiology', hours: 'Open 24/7', lat: 19.0596, lng: 72.8656, facilities: ['ICU', 'Cardiology Dept', 'Emergency', 'Cardiac Rehab'] },
-  { id: 29, name: 'Medanta - The Medicity Heart Institute', address: 'CH Baktawar Singh Rd, Sector 38', city: 'Gurugram', state: 'Haryana', phone: '+91 124 414 1414', rating: 4.8, specialty: 'Electrophysiology', hours: 'Open 24/7', lat: 28.4395, lng: 77.0426, facilities: ['ICU', 'Cardiology Dept', 'Emergency', 'Electrophysiology Lab', 'Cardiac Surgery'] },
-  { id: 30, name: 'Apollo Hospitals Heart Centre', address: '21, Greams Lane', city: 'Chennai', state: 'Tamil Nadu', phone: '+91 44 2829 3333', rating: 4.7, specialty: 'Cardiac Surgery', hours: 'Open 24/7', lat: 13.0604, lng: 80.2496, facilities: ['ICU', 'Cardiac Surgery', 'Emergency', 'Cath Lab', 'Cardiac Rehab'] },
-  { id: 31, name: 'SCTIMST - Sree Chitra Heart Centre', address: 'Medical College PO', city: 'Thiruvananthapuram', state: 'Kerala', phone: '+91 471 252 4600', rating: 4.6, specialty: 'Cardiovascular Medicine', hours: 'Mon-Sat 8AM-6PM', lat: 8.5241, lng: 76.9366, facilities: ['ICU', 'Cardiology Dept', 'Research Lab'] },
-  { id: 32, name: 'Care Hospitals Heart Center', address: 'Road No 1, Banjara Hills', city: 'Hyderabad', state: 'Telangana', phone: '+91 40 6810 6810', rating: 4.6, specialty: 'Interventional Cardiology', hours: 'Open 24/7', lat: 17.4112, lng: 78.4386, facilities: ['ICU', 'Emergency', 'Cath Lab'] },
   { id: 33, name: 'Royal Brompton & Harefield Hospital', address: 'Sydney St, Chelsea', city: 'London', state: 'England', phone: '+44 20 7352 8121', rating: 4.8, specialty: 'Heart & Lung Disease', hours: 'Open 24/7', lat: 51.4889, lng: -0.1711, facilities: ['ICU', 'Cardiology Dept', 'Emergency', 'Cardiac Surgery', 'Research Lab'] },
   { id: 34, name: 'Barts Heart Centre', address: 'W Smithfield', city: 'London', state: 'England', phone: '+44 20 3416 5000', rating: 4.7, specialty: 'Cardiac Surgery', hours: 'Open 24/7', lat: 51.5181, lng: -0.0998, facilities: ['ICU', 'Cardiac Surgery', 'Emergency', 'Cath Lab', 'Electrophysiology Lab'] },
 ];
 
-const states = [...new Set(hospitalDatabase.map(h => h.state))].sort();
+const allStates = [...new Set(hospitalDatabase.map(h => h.state))].sort();
 const citiesByState: Record<string, string[]> = {};
 hospitalDatabase.forEach(h => {
   if (!citiesByState[h.state]) citiesByState[h.state] = [];
@@ -70,14 +64,14 @@ hospitalDatabase.forEach(h => {
 Object.values(citiesByState).forEach(arr => arr.sort());
 
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3958.8;
+  const R = 6371; // km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-type LocationMode = 'pending' | 'granted' | 'denied' | 'manual';
+type LocationMode = 'pending' | 'granted' | 'denied' | 'manual' | 'india';
 type SortMode = 'distance' | 'rating';
 
 const facilityIcons: Record<string, typeof Stethoscope> = {
@@ -100,6 +94,12 @@ export default function Hospitals() {
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortMode>('distance');
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+
+  // India structured search
+  const [showIndiaDialog, setShowIndiaDialog] = useState(false);
+  const [indiaState, setIndiaState] = useState('');
+  const [indiaDistrict, setIndiaDistrict] = useState('');
+  const [indiaApplied, setIndiaApplied] = useState<{ state: string; district: string } | null>(null);
 
   useEffect(() => { if (!user) navigate('/login'); }, [user, navigate]);
 
@@ -143,8 +143,17 @@ export default function Hospitals() {
   const applyManualLocation = () => {
     if (!manualState) return;
     setManualApplied({ city: manualCity, state: manualState });
+    setIndiaApplied(null);
     setLocationMode('manual');
     setShowManualDialog(false);
+  };
+
+  const applyIndiaLocation = () => {
+    if (!indiaState) return;
+    setIndiaApplied({ state: indiaState, district: indiaDistrict });
+    setManualApplied(null);
+    setLocationMode('india');
+    setShowIndiaDialog(false);
   };
 
   const openDirections = (h: Hospital) => {
@@ -163,13 +172,46 @@ export default function Hospitals() {
   // Build filtered & sorted list
   let results: Hospital[] = [];
 
-  if (locationMode === 'granted' && userCoords) {
-    results = hospitalDatabase.map(h => ({
+  if (locationMode === 'india' && indiaApplied) {
+    // Search India hospitals
+    let indiaResults = indiaHospitalDatabase.filter(h =>
+      h.state.toLowerCase() === indiaApplied.state.toLowerCase()
+    );
+    if (indiaApplied.district) {
+      const districtMatch = indiaResults.filter(h =>
+        h.district.toLowerCase() === indiaApplied.district.toLowerCase() ||
+        h.city.toLowerCase() === indiaApplied.district.toLowerCase()
+      );
+      if (districtMatch.length > 0) {
+        const rest = indiaResults.filter(h =>
+          h.district.toLowerCase() !== indiaApplied.district.toLowerCase() &&
+          h.city.toLowerCase() !== indiaApplied.district.toLowerCase()
+        );
+        indiaResults = [...districtMatch, ...rest];
+      }
+    }
+    // Convert to Hospital type
+    results = indiaResults.map(h => ({
+      id: h.id, name: h.name, address: h.address, city: h.city, state: h.state,
+      phone: h.phone, rating: h.rating, specialty: h.specialty, hours: h.hours,
+      lat: h.lat, lng: h.lng, facilities: h.facilities,
+    }));
+  } else if (locationMode === 'granted' && userCoords) {
+    // Combine both databases for distance search
+    const allHospitals: Hospital[] = [
+      ...hospitalDatabase,
+      ...indiaHospitalDatabase.map(h => ({
+        id: h.id, name: h.name, address: h.address, city: h.city, state: h.state,
+        phone: h.phone, rating: h.rating, specialty: h.specialty, hours: h.hours,
+        lat: h.lat, lng: h.lng, facilities: h.facilities,
+      })),
+    ];
+    results = allHospitals.map(h => ({
       ...h,
       _dist: haversineDistance(userCoords.lat, userCoords.lng, h.lat, h.lng),
     })).map(h => ({
       ...h,
-      distance: h._dist < 1 ? `${(h._dist * 5280).toFixed(0)} ft` : h._dist < 100 ? `${h._dist.toFixed(1)} mi` : `${h._dist.toFixed(0)} mi`,
+      distance: h._dist! < 1 ? `${(h._dist! * 1000).toFixed(0)} m` : h._dist! < 100 ? `${h._dist!.toFixed(1)} km` : `${h._dist!.toFixed(0)} km`,
     }));
   } else if (locationMode === 'manual' && manualApplied) {
     const stateHospitals = hospitalDatabase.filter(h =>
@@ -235,7 +277,7 @@ export default function Hospitals() {
         </DialogContent>
       </Dialog>
 
-      {/* Manual Location Dialog */}
+      {/* Manual Location Dialog (Global) */}
       <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -253,7 +295,7 @@ export default function Hospitals() {
               <Select value={manualState} onValueChange={(v) => { setManualState(v); setManualCity(''); }}>
                 <SelectTrigger><SelectValue placeholder="Select state or region" /></SelectTrigger>
                 <SelectContent>
-                  {states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {allStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -279,6 +321,54 @@ export default function Hospitals() {
         </DialogContent>
       </Dialog>
 
+      {/* India State → District Dialog */}
+      <Dialog open={showIndiaDialog} onOpenChange={setShowIndiaDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto mb-3 w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <Building2 className="h-7 w-7 text-primary" />
+            </div>
+            <DialogTitle className="text-center">Search Hospitals in India</DialogTitle>
+            <DialogDescription className="text-center">
+              Select your state and district to find the nearest cardiac care hospitals.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Country</label>
+              <Input value="India" disabled className="opacity-60" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">State *</label>
+              <Select value={indiaState} onValueChange={(v) => { setIndiaState(v); setIndiaDistrict(''); }}>
+                <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                <SelectContent>
+                  {indiaStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">District / City</label>
+              {indiaState && indiaStatesDistricts[indiaState] ? (
+                <Select value={indiaDistrict} onValueChange={setIndiaDistrict}>
+                  <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
+                  <SelectContent>
+                    {indiaStatesDistricts[indiaState].map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input placeholder="Enter district" value={indiaDistrict} onChange={e => setIndiaDistrict(e.target.value)} />
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={applyIndiaLocation} disabled={!indiaState} className="w-full gap-2">
+              <Search className="h-4 w-4" /> Find Hospitals in India
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Hospital Detail Dialog */}
       <Dialog open={!!selectedHospital} onOpenChange={() => setSelectedHospital(null)}>
         <DialogContent className="sm:max-w-lg">
@@ -289,19 +379,14 @@ export default function Hospitals() {
                 <DialogDescription>{selectedHospital.specialty}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                {/* Map embed */}
                 <div className="rounded-lg overflow-hidden border border-border aspect-video">
                   <iframe
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
+                    width="100%" height="100%" style={{ border: 0 }} loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     src={`https://www.google.com/maps?q=${selectedHospital.lat},${selectedHospital.lng}&z=15&output=embed`}
                     title={`Map of ${selectedHospital.name}`}
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="space-y-2">
                     <p className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4 shrink-0" /> {selectedHospital.address}, {selectedHospital.city}</p>
@@ -312,8 +397,6 @@ export default function Hospitals() {
                     <p className="flex items-center gap-2 text-muted-foreground"><Star className="h-4 w-4 shrink-0 text-primary" /> {selectedHospital.rating} / 5.0</p>
                   </div>
                 </div>
-
-                {/* Facilities */}
                 <div>
                   <h4 className="font-heading font-semibold text-sm text-foreground mb-2">Facilities</h4>
                   <div className="flex flex-wrap gap-2">
@@ -327,7 +410,6 @@ export default function Hospitals() {
                     })}
                   </div>
                 </div>
-
                 <Button className="w-full gap-2" onClick={() => openDirections(selectedHospital)}>
                   <Navigation className="h-4 w-4" /> Get Directions (Google Maps)
                 </Button>
@@ -344,18 +426,22 @@ export default function Hospitals() {
             <p className="text-muted-foreground">
               {locationMode === 'granted' && 'Showing hospitals nearest to your current location'}
               {locationMode === 'manual' && manualApplied && `Showing hospitals in ${manualApplied.city ? manualApplied.city + ', ' : ''}${manualApplied.state}`}
+              {locationMode === 'india' && indiaApplied && `Showing hospitals in ${indiaApplied.district ? indiaApplied.district + ', ' : ''}${indiaApplied.state}, India`}
               {locationMode === 'pending' && 'Locate nearby hospitals specializing in cardiovascular care'}
               {locationMode === 'denied' && !manualApplied && 'Enter your location to find nearby hospitals'}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {locationMode !== 'granted' && (
               <Button size="sm" variant="outline" onClick={requestLocation} className="gap-1.5 shrink-0">
                 <LocateFixed className="h-3.5 w-3.5" /> Use My Location
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={() => setShowManualDialog(true)} className="gap-1.5 shrink-0">
-              <MapPin className="h-3.5 w-3.5" /> Change Location
+              <MapPin className="h-3.5 w-3.5" /> Global Search
+            </Button>
+            <Button size="sm" onClick={() => setShowIndiaDialog(true)} className="gap-1.5 shrink-0">
+              <Building2 className="h-3.5 w-3.5" /> Search India
             </Button>
           </div>
         </div>
@@ -411,7 +497,6 @@ export default function Hospitals() {
                 <p className="flex items-center gap-2"><Phone className="h-4 w-4 flex-shrink-0" /> {h.phone}</p>
                 <p className="flex items-center gap-2"><Clock className="h-4 w-4 flex-shrink-0" /> {h.hours}</p>
               </div>
-              {/* Facility tags */}
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {h.facilities.slice(0, 4).map(f => (
                   <span key={f} className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">{f}</span>
@@ -437,9 +522,14 @@ export default function Hospitals() {
             <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p className="font-medium">No hospitals found matching your criteria.</p>
             <p className="text-sm mt-1">Try broadening your search or changing your location.</p>
-            <Button variant="outline" className="mt-4" onClick={() => { setSearch(''); setShowManualDialog(true); }}>
-              Change Location
-            </Button>
+            <div className="flex gap-2 justify-center mt-4">
+              <Button variant="outline" onClick={() => { setSearch(''); setShowManualDialog(true); }}>
+                Global Search
+              </Button>
+              <Button onClick={() => { setSearch(''); setShowIndiaDialog(true); }}>
+                Search India
+              </Button>
+            </div>
           </div>
         )}
       </div>

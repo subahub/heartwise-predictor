@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircleHeart, X, Send, Mic, MicOff, Globe, Loader2, Bot, User, AlertTriangle } from 'lucide-react';
+import { MessageCircleHeart, X, Send, Loader2, Bot, User, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ReactMarkdown from 'react-markdown';
@@ -9,56 +9,14 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cvd-chat`;
 
-/** Clean speech-to-text output: remove repeated/broken word fragments */
-function cleanTranscript(raw: string): string {
-  if (!raw) return raw;
-  // Split into words
-  const words = raw.trim().split(/\s+/);
-  const cleaned: string[] = [];
-
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const prev = cleaned[cleaned.length - 1];
-
-    // Skip exact duplicate of previous word
-    if (prev && word.toLowerCase() === prev.toLowerCase()) continue;
-
-    // Skip if previous word is a prefix fragment of current word (e.g., "sug" before "suggest")
-    if (prev && word.toLowerCase().startsWith(prev.toLowerCase()) && prev.length < word.length) {
-      cleaned[cleaned.length - 1] = word;
-      continue;
-    }
-
-    // Skip if current word is a prefix fragment of previous word
-    if (prev && prev.toLowerCase().startsWith(word.toLowerCase()) && word.length < prev.length) {
-      continue;
-    }
-
-    cleaned.push(word);
-  }
-
-  let result = cleaned.join(' ');
-  // Capitalize first letter
-  if (result.length > 0) {
-    result = result.charAt(0).toUpperCase() + result.slice(1);
-  }
-  // Ensure ends with punctuation
-  if (result && !/[.!?]$/.test(result)) {
-    result += '.';
-  }
-  return result;
-}
-
 export default function HealthChatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -139,39 +97,6 @@ export default function HealthChatbot() {
     streamChat(updated);
   };
 
-  // Speech-to-text with deduplication
-  const toggleVoice = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setError('Speech recognition not supported in this browser.');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (e: any) => {
-      const rawTranscript = e.results[0][0].transcript;
-      const cleaned = cleanTranscript(rawTranscript);
-      setInput(prev => (prev ? prev + ' ' : '') + cleaned);
-      setIsListening(false);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  };
-
   const quickPrompts = [
     '💓 How to lower blood pressure?',
     '🥗 Heart-healthy diet tips',
@@ -181,7 +106,6 @@ export default function HealthChatbot() {
 
   return (
     <>
-      {/* Floating button */}
       <AnimatePresence>
         {!open && (
           <motion.button
@@ -198,7 +122,6 @@ export default function HealthChatbot() {
         )}
       </AnimatePresence>
 
-      {/* Chat window */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -208,7 +131,6 @@ export default function HealthChatbot() {
             transition={{ duration: 0.2 }}
             className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-6rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
@@ -216,18 +138,14 @@ export default function HealthChatbot() {
                 </div>
                 <div>
                   <p className="font-heading font-semibold text-sm">CardioGuard AI</p>
-                  <p className="text-[10px] opacity-80">CVD Health Assistant • English</p>
+                  <p className="text-[10px] opacity-80">CVD Health Assistant</p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
-              >
+              <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Messages */}
             <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
               {messages.length === 0 ? (
                 <div className="space-y-4 text-center">
@@ -236,19 +154,11 @@ export default function HealthChatbot() {
                   </div>
                   <div>
                     <p className="font-heading font-semibold text-foreground">Hello! 👋</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      I'm your CVD health assistant. Ask me anything about heart health.
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">I'm your CVD health assistant. Ask me anything about heart health.</p>
                   </div>
                   <div className="space-y-2">
                     {quickPrompts.map(q => (
-                      <button
-                        key={q}
-                        onClick={() => setInput(q)}
-                        className="block w-full text-left text-xs bg-muted hover:bg-accent rounded-lg px-3 py-2 transition-colors text-foreground"
-                      >
-                        {q}
-                      </button>
+                      <button key={q} onClick={() => setInput(q)} className="block w-full text-left text-xs bg-muted hover:bg-accent rounded-lg px-3 py-2 transition-colors text-foreground">{q}</button>
                     ))}
                   </div>
                 </div>
@@ -261,20 +171,12 @@ export default function HealthChatbot() {
                           <Bot className="h-3 w-3 text-primary" />
                         </div>
                       )}
-                      <div
-                        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground rounded-br-md'
-                            : 'bg-muted text-foreground rounded-bl-md'
-                        }`}
-                      >
+                      <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-muted text-foreground rounded-bl-md'}`}>
                         {msg.role === 'assistant' ? (
                           <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&>li]:my-0.5">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
-                        ) : (
-                          msg.content
-                        )}
+                        ) : msg.content}
                       </div>
                       {msg.role === 'user' && (
                         <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-1">
@@ -297,7 +199,6 @@ export default function HealthChatbot() {
               )}
             </ScrollArea>
 
-            {/* Error banner */}
             {error && (
               <div className="mx-4 mb-2 p-2 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-xs text-destructive">
                 <AlertTriangle className="h-3 w-3 shrink-0" />
@@ -306,39 +207,22 @@ export default function HealthChatbot() {
               </div>
             )}
 
-            {/* Input area */}
             <div className="p-3 border-t border-border shrink-0 bg-card">
               <div className="flex items-end gap-2">
-                <button
-                  onClick={toggleVoice}
-                  className={`p-2 rounded-lg transition-colors shrink-0 ${
-                    isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'hover:bg-muted text-muted-foreground'
-                  }`}
-                  title={isListening ? 'Stop listening' : 'Speak your question'}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </button>
                 <textarea
                   ref={inputRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  placeholder={isListening ? 'Listening...' : 'Ask about heart health...'}
+                  placeholder="Ask about heart health..."
                   rows={1}
                   className="flex-1 resize-none bg-muted rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary max-h-24"
                 />
-                <Button
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  className="shrink-0 h-9 w-9 rounded-lg"
-                >
+                <Button size="icon" onClick={handleSend} disabled={!input.trim() || isLoading} className="shrink-0 h-9 w-9 rounded-lg">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[9px] text-muted-foreground text-center mt-2">
-                General health info only • Not medical advice • Consult your doctor
-              </p>
+              <p className="text-[9px] text-muted-foreground text-center mt-2">General health info only • Not medical advice • Consult your doctor</p>
             </div>
           </motion.div>
         )}
