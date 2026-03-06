@@ -41,7 +41,7 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.7 }} className="space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg glass-card border border-primary/30 text-primary-foreground text-sm">
-                <Heart className="h-4 w-4 text-primary fill-primary animate-[heartbeat_1.5s_ease-in-out_infinite]" />
+                <Heart className="h-4 w-4 text-primary fill-primary heartbeat-glow" />
                 17.9 million lives lost every year — let's change that
               </div>
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight">
