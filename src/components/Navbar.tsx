@@ -26,7 +26,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl text-foreground">
-          <Heart className="h-7 w-7 text-primary fill-primary" />
+          <Heart className="h-7 w-7 text-primary fill-primary animate-[heartbeat_1.5s_ease-in-out_infinite]" />
           CardioGuard
         </Link>
 
