@@ -24,21 +24,24 @@ export default function Footer() {
           <div>
             <h4 className="font-heading font-semibold mb-3">Resources</h4>
             <div className="space-y-2 text-sm opacity-70">
-              <a href="#" className="block hover:opacity-100 transition-opacity">About CVD</a>
-              <a href="#" className="block hover:opacity-100 transition-opacity">Health Tips</a>
-              <a href="#" className="block hover:opacity-100 transition-opacity">FAQ</a>
+              <a href="#" className="block hover:opacity-100 transition-opacity">CVD Awareness</a>
+              <a href="#" className="block hover:opacity-100 transition-opacity">Prevention Guidelines</a>
+              <a href="#" className="block hover:opacity-100 transition-opacity">Heart Health Tips</a>
+              <a href="#" className="block hover:opacity-100 transition-opacity">Emergency Symptoms</a>
+              <a href="#" className="block hover:opacity-100 transition-opacity">Research References</a>
             </div>
           </div>
           <div>
             <h4 className="font-heading font-semibold mb-3">Contact</h4>
             <div className="space-y-2 text-sm opacity-70">
-              <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> support@cardioguard.ai</p>
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4" /> +1 (800) 555-0199</p>
-              <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> San Francisco, CA</p>
+              <p className="flex items-center gap-2"><Mail className="h-4 w-4" /> cardioguard.project@gmail.com</p>
+              <p className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 93377 55999</p>
+              <p className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Tamil Nadu, India</p>
             </div>
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-primary-foreground/10 text-center text-sm opacity-50 space-y-1">
+          <p>For queries regarding the Cardiovascular Disease Early Detection system, dataset usage, or technical details, please contact the development team.</p>
           <p>This platform provides educational information only and does not replace professional medical consultation.</p>
           <p>© 2026 CardioGuard. All rights reserved.</p>
         </div>
