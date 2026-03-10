@@ -41,6 +41,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-primary-foreground/10 text-center text-sm opacity-50 space-y-1">
+          <p>For queries regarding the Cardiovascular Disease Early Detection system, dataset usage, or technical details, please contact the development team.</p>
           <p>This platform provides educational information only and does not replace professional medical consultation.</p>
           <p>© 2026 CardioGuard. All rights reserved.</p>
         </div>
