@@ -69,7 +69,7 @@ export default function LandingPage() {
                 <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> HIPAA aware</span>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden lg:block">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden md:block">
               <ECGHeartAnimation />
             </motion.div>
           </div>
