@@ -41,7 +41,7 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.7 }} className="space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg glass-card border border-primary/30 text-primary-foreground text-sm">
-                <Heart className="h-4 w-4 text-primary fill-primary heartbeat-glow" />
+                <Heart className="h-4 w-4 heartbeat-glow" style={{ color: 'hsl(168 80% 40%)', fill: 'hsl(168 80% 40%)' }} />
                 17.9 million lives lost every year — let's change that
               </div>
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight">
@@ -69,7 +69,7 @@ export default function LandingPage() {
                 <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> HIPAA aware</span>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden lg:block">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="hidden md:block">
               <ECGHeartAnimation />
             </motion.div>
           </div>
