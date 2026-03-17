@@ -509,7 +509,7 @@ export default function Hospitals() {
                 <span className="text-xs text-muted-foreground">
                   {h.distance ? `${h.distance} away` : `${h.city}, ${h.state}`}
                 </span>
-                <Button size="sm" variant="outline" className="gap-1" onClick={(e) => { e.stopPropagation(); openDirections(h); }}>
+                <Button size="sm" variant="outline" className="gap-1" disabled>
                   <ExternalLink className="h-3.5 w-3.5" /> Directions
                 </Button>
               </div>
